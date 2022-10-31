@@ -17,9 +17,10 @@ if LINKS:
         if link.text != last_title:
             # print(link.text)
             requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=html&text=%s' % (TOKEN, CHATID, link.text))
-            time.sleep(1)
+            if len(LINKS) > 1:
+                time.sleep(1)
         else:
-            with open('last.txt', 'w') as f:
-                f.write(str(LINKS[0].text))
             break
 
+with open('last.txt', 'w') as f:
+    f.write(str(LINKS[0].text))
