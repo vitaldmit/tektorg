@@ -8,20 +8,27 @@ URL = 'https://www.tektorg.ru/market/procedures?region=Чувашская+Рес
 page = requests.get(URL)
 soup = BeautifulSoup(page.text, 'html.parser')
 
-LINKS = soup.find_all('a', class_='section-procurement__item-title')
+PROCEDURES = soup.find_all('div', class_='section-procurement__item')
+PROCEDURE = []
 
-if LINKS:
+if PROCEDURES:
     with open('last.txt') as f:
-        last_title = str(f.readline()).strip()
+        last = str(f.readline()).strip()
 
-    for link in LINKS:
-        if link.text.strip() != last_title:
-            # print(link.text)
-            requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=html&text=%s' % (TOKEN, CHATID, link.text))
-            if len(LINKS) > 1:
-                time.sleep(1)
+    for item in PROCEDURES:
+        title = item.find('a', class_='section-procurement__item-title')
+        href = title.href
+
+        if title.text.strip() != last:
+            PROCEDURE.append(title)
+            print(title, href)
         else:
             break
 
-    with open('last.txt', 'w') as f:
-        f.write(str(LINKS[0].text.strip()))
+    to_telegram = '\n'.join(PROCEDURE)
+
+    requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=html&text=%s' % (TOKEN, CHATID, to_telegram))
+
+    # with open('last.txt', 'w') as f:
+    #     f.write(str(PROCEDURES[0].text.strip()))
+    # print(str(PROCEDURES[0].text.strip()))
