@@ -25,8 +25,8 @@ if LINKS:
             break
 
     to_telegram = '\n\n'.join(str(v) for v in items)
-    # requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=html&text=%s' % (TOKEN, CHATID, to_telegram))
-    print(to_telegram)
+    requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=html&text=%s' % (TOKEN, CHATID, to_telegram))
+    # print(to_telegram)
 
     with open('last.txt', 'w') as f:
         f.write(str(LINKS[0].text.strip()))
