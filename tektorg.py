@@ -4,31 +4,28 @@ from bs4 import BeautifulSoup
 from secrets import TOKEN, CHATID
 
 
-URL = 'https://www.tektorg.ru/market/procedures?region=Чувашская+Республика&status=270&lang=ru&sort=datestart&limit=500'
+URL = 'https://www.tektorg.ru/market/procedures?status=270&region=%D0%A7%D1%83%D0%B2%D0%B0%D1%88%D1%81%D0%BA%D0%B0%D1%8F+%D0%A0%D0%B5%D1%81%D0%BF%D1%83%D0%B1%D0%BB%D0%B8%D0%BA%D0%B0&lang=ru&sort=datestart&order=desc'
+# URL = 'https://www.tektorg.ru/market/procedures?q=Янтиков&region=Чувашская+Республика&status=270&lang=ru&sort=datestart&limit=500'
 page = requests.get(URL)
 soup = BeautifulSoup(page.text, 'html.parser')
+items = []
 
-PROCEDURES = soup.find_all('div', class_='section-procurement__item')
-PROCEDURE = []
+LINKS = soup.find_all('a', class_='section-procurement__item-title')
 
-if PROCEDURES:
+if LINKS:
     with open('last.txt') as f:
-        last = str(f.readline()).strip()
+        last_title = str(f.readline()).strip()
 
-    for item in PROCEDURES:
-        title = item.find('a', class_='section-procurement__item-title')
-        href = title.href
-
-        if title.text.strip() != last:
-            PROCEDURE.append(title)
-            print(title, href)
+    for link in LINKS:
+        if link.text.strip() != last_title:
+            items.append(link.text + ": " + "https://www.tektorg.ru" + link['href'])
         else:
             break
 
-    to_telegram = '\n'.join(PROCEDURE)
-
+    to_telegram = '\n\n'.join(str(v) for v in items)
     requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=html&text=%s' % (TOKEN, CHATID, to_telegram))
+    # print(to_telegram)
 
-    # with open('last.txt', 'w') as f:
-    #     f.write(str(PROCEDURES[0].text.strip()))
-    # print(str(PROCEDURES[0].text.strip()))
+    with open('last.txt', 'w') as f:
+        f.write(str(LINKS[0].text.strip()))
+
