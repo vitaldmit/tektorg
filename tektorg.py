@@ -13,11 +13,11 @@ LINKS = soup.find_all('a', class_='section-procurement__item-title')
 if LINKS:
     with open('last.txt') as f:
         last_title = str(f.readline()).strip()
-
+    print(last_title)
     for link in LINKS:
         if link.text.strip() != last_title:
-            # print(link.text)
-            requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=html&text=%s' % (TOKEN, CHATID, link.text))
+            print(link.text)
+            # requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=html&text=%s' % (TOKEN, CHATID, link.text))
             if len(LINKS) > 1:
                 time.sleep(1)
         else:
