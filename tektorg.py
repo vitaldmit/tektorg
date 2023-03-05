@@ -22,6 +22,7 @@ def getProcedures(city):
     dataList = json.loads(json_acceptable_string)
 
     list_of_procedures = dataList['data']
+    print(list_of_procedures)
     first_id = str(list_of_procedures[0]['id'])
     messages = []
 
@@ -36,7 +37,7 @@ def getProcedures(city):
 
         for procedure in list_of_procedures:
             if str(procedure['id']) != last_id:
-                messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']:,}) *{procedure['sumPrice']}* `{procedure['organizerName']}`")
+                messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']}) *{procedure['sumPrice']}* `{procedure['organizerName']}`")
             else:
                 break
 
