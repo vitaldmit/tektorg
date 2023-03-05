@@ -37,7 +37,7 @@ def getProcedures(city):
 
         for procedure in list_of_procedures:
             if str(procedure['id']) != last_id:
-                messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']}) *{procedure['sumPrice']}* `{procedure['organizerName']}`")
+                messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']}) *{procedure['sumPrice']}* __{procedure['organizerName']}__")
             else:
                 break
 
