@@ -26,12 +26,17 @@ def getProcedures(city):
     messages = []
 
     if res and list_of_procedures:
-        with open(city + '.txt', 'r', encoding='utf-8') as f:
-            last_id = str(f.readline()).strip()
+        try:
+            with open(city + '.txt', 'r', encoding='utf-8') as f:
+                last_id = str(f.readline()).strip()
+        except FileNotFoundError:
+            with open(city + '.txt', mode='a'): pass
+            last_id = 0
+
 
         for procedure in list_of_procedures:
             if str(procedure['id']) != last_id:
-                messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']}) *{procedure['sumPrice']}* `{procedure['organizerName']}`")
+                messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']:,}) *{procedure['sumPrice']}* `{procedure['organizerName']}`")
             else:
                 break
 
