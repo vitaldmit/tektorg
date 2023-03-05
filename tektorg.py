@@ -1,35 +1,54 @@
+import json
 import requests
-from bs4 import BeautifulSoup
 
 from secrets import TOKEN, CHATID
 
+def getProcedures(city):
+    URL = 'https://www.tektorg.ru/api/getProcedures'
+    req_dict = {"params":{"sectionsCodes[0]":"market","name":city,"status[0]":"Приём заявок","page":1,"sort":"datePublished_desc"}}
+    headers = { 'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Connection': 'keep-alive',
+                'Content-Type': 'application/json',
+                'Origin': 'https://www.tektorg.ru',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+                }
 
-URL = 'https://www.tektorg.ru/market/procedures?q=%D0%AF%D0%BD%D1%82%D0%B8%D0%BA%D0%BE%D0%B2&region=%D0%A7%D1%83%D0%B2%D0%B0%D1%88%D1%81%D0%BA%D0%B0%D1%8F+%D0%A0%D0%B5%D1%81%D0%BF%D1%83%D0%B1%D0%BB%D0%B8%D0%BA%D0%B0&status=270&lang=ru&sort=datestart&limit=500'
-headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'}
 
-page = requests.get(URL, headers=headers)
-soup = BeautifulSoup(page.text, 'html.parser')
-messages = []
+    res = requests.post(URL, headers=headers, json=req_dict)
 
-ITEMS = soup.find_all('div', {'class': 'section-procurement__item-info'})
+    # Convert to dict
+    json_acceptable_string = res.text.replace("'", "\"")
+    dataList = json.loads(json_acceptable_string)
 
-if ITEMS:
-    LAST_ITEM = ITEMS[0].find('a', {'class': 'section-procurement__item-title'})
+    list_of_procedures = dataList['data']
+    first_id = str(list_of_procedures[0]['id'])
+    messages = []
 
-    with open('last.txt', 'r', encoding='utf-8') as f:
-        last = str(f.readline()).strip()
+    if res and list_of_procedures:
+        with open(city + '.txt', 'r', encoding='utf-8') as f:
+            last_id = str(f.readline()).strip()
 
-    for item in ITEMS:
-        link = item.find('a', {'class': 'section-procurement__item-title'})
-        price = item.find('div', {'class': 'section-procurement__item-totalPrice'})
-        if link.text.strip() != last:
-            messages.append(f"[{link.text}](https://www.tektorg.ru{link['href']}) *{price.text}*")
+        for procedure in list_of_procedures:
+            if str(procedure['id']) != last_id:
+                messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']}) *{procedure['sumPrice']}* `{procedure['organizerName']}`")
+            else:
+                break
+
+        to_telegram = '\n\n'.join(str(m) for m in messages)
+
+        if len(to_telegram) > 4096:
+            for x in range(0, len(to_telegram), 4096):
+                requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=Markdown&text=%s' % (TOKEN, CHATID, to_telegram[x:x+4096]))
+                # print(to_telegram[x:x+4096])
         else:
-            break
+            requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=Markdown&text=%s' % (TOKEN, CHATID, to_telegram))
+            # print(to_telegram)
 
-    to_telegram = '\n\n'.join(str(m) for m in messages)
-    response = requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=Markdown&text=%s' % (TOKEN, CHATID, to_telegram))
+        with open(city + '.txt', 'w', encoding='utf-8') as f:
+            f.write(first_id.strip())
 
-    with open('last.txt', 'w', encoding='utf-8') as f:
-        f.write(str(LAST_ITEM.text.strip()))
 
+if __name__ == '__main__':
+    getProcedures('Янтиков')
+    getProcedures('Канаш')
