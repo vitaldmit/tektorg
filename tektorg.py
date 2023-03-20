@@ -22,37 +22,38 @@ def getProcedures(city):
     dataList = json.loads(json_acceptable_string)
 
     list_of_procedures = dataList['data']
-    print(list_of_procedures)
-    first_id = str(list_of_procedures[0]['id'])
-    messages = []
+    if list_of_procedures:
+        # print(list_of_procedures)
+        first_id = str(list_of_procedures[0]['id'])
+        messages = []
 
-    if res and list_of_procedures:
-        try:
-            with open(city + '.txt', 'r', encoding='utf-8') as f:
-                last_id = str(f.readline()).strip()
-        except FileNotFoundError:
-            with open(city + '.txt', mode='a'): pass
-            last_id = 0
+        if res and list_of_procedures:
+            try:
+                with open(city + '.txt', 'r', encoding='utf-8') as f:
+                    last_id = str(f.readline()).strip()
+            except FileNotFoundError:
+                with open(city + '.txt', mode='a'): pass
+                last_id = 0
 
 
-        for procedure in list_of_procedures:
-            if str(procedure['id']) != last_id:
-                messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']}) *{procedure['sumPrice']}* __{procedure['organizerName']}__")
+            for procedure in list_of_procedures:
+                if str(procedure['id']) != last_id:
+                    messages.append(f"[{procedure['title']}](https://www.tektorg.ru/market/procedures/{procedure['id']}) *{procedure['sumPrice']}* __{procedure['organizerName']}__")
+                else:
+                    break
+
+            to_telegram = '\n\n'.join(str(m) for m in messages)
+
+            if len(to_telegram) > 4096:
+                for x in range(0, len(to_telegram), 4096):
+                    requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=Markdown&text=%s' % (TOKEN, CHATID, to_telegram[x:x+4096]))
+                    # print(to_telegram[x:x+4096])
             else:
-                break
+                requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=Markdown&text=%s' % (TOKEN, CHATID, to_telegram))
+                # print(to_telegram)
 
-        to_telegram = '\n\n'.join(str(m) for m in messages)
-
-        if len(to_telegram) > 4096:
-            for x in range(0, len(to_telegram), 4096):
-                requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=Markdown&text=%s' % (TOKEN, CHATID, to_telegram[x:x+4096]))
-                # print(to_telegram[x:x+4096])
-        else:
-            requests.get('https://api.telegram.org/bot%s/sendMessage?chat_id=%s&parse_mode=Markdown&text=%s' % (TOKEN, CHATID, to_telegram))
-            # print(to_telegram)
-
-        with open(city + '.txt', 'w', encoding='utf-8') as f:
-            f.write(first_id.strip())
+            with open(city + '.txt', 'w', encoding='utf-8') as f:
+                f.write(first_id.strip())
 
 
 if __name__ == '__main__':
